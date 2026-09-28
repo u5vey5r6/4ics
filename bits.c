@@ -91,7 +91,12 @@ int logtwo(int v) {
  *    Difficulty: 2
  */
 int byteSwap(int x, int n, int m) {
-    return 2;
+    int n3=n<<3;
+    int m3=m<<3;
+    int xn=(x>>n3)&255;
+    int xm=(x>>m3)&255;
+    int mn=xn^xm;
+    return x^(mn<<n3)^(mn<<m3);
 }
 
 /*
