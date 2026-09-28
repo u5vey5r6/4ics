@@ -108,7 +108,20 @@ int byteSwap(int x, int n, int m) {
  *   Difficulty: 3
  */
 unsigned reverse(unsigned v) {
-    return 2;
+    unsigned a=v>>31;
+    v|=1<<31;
+    unsigned rv=0,tem;
+    while(v)
+    {
+        tem=v&1;
+        v>>=1;
+        rv<<=1;
+        rv|=tem;
+    }
+    rv>>=1;
+    rv<<=1;
+    rv|=a;
+    return rv;
 }
 
 /*
