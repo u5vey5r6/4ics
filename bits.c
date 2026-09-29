@@ -133,7 +133,9 @@ unsigned reverse(unsigned v) {
  *   Difficulty: 3
  */
 int logicalShift(int x, int n) {
-    return 2;
+    int y=x>>n;
+    int z=(((x>>31)<<31)>>n)<<1;
+    return y^z;
 }
 
 /*
