@@ -147,7 +147,25 @@ int logicalShift(int x, int n) {
  *   Difficulty: 4
  */
 int leftBitCount(int x) {
-    return 2;
+    int a1=(x>>31)&1;
+    a1=~a1+1;
+    int y=~x;
+    int s1=!!(y>>16);
+    s1=s1<<4;
+    y>>=s1;
+    int s2=!!(y>>8);
+    s2=s2<<3;
+    y>>=s2;
+    int s3=!!(y>>4);
+    s3=s3<<2;
+    y>>=s3;
+    int s4=!!(y>>2);
+    s4=s4<<1;
+    y>>=s4;
+    int s5=!!(y>>1);
+    y>>=s5;
+    int y1=!y+((s1|s2|s3|s4|s5)^31);
+    return y1&a1;
 }
 
 /*
@@ -159,7 +177,34 @@ int leftBitCount(int x) {
  *   Difficulty: 4
  */
 unsigned float_i2f(int x) {
-    return 2;
+    unsigned ux=x;
+    unsigned sign=ux&(1<<31);
+    unsigned abs=ux;
+    if(sign) abs=~ux+1;
+    if(!abs) return 0;
+    int e=31;
+    while (!(abs>>e)) e--;
+    unsigned exp=e+127;
+    unsigned frac;
+    if (e<=23)
+        frac=(abs<<(23-e))&0x7fffff;
+    else 
+    {
+        int shift=e-23;
+        frac=(abs>>shift)&0x7fffff;
+        unsigned rem=abs&((1<<shift)-1);
+        unsigned half=1<<(shift-1);
+        if (rem+(frac&1)>half) 
+        {
+            frac++;
+            if (frac==0x800000) 
+            {
+                frac=0;
+                exp++;
+            }
+        }
+    }
+    return sign|(exp<<23)|frac;
 }
 
 /*
@@ -173,8 +218,16 @@ unsigned float_i2f(int x) {
  *   Max ops: 30
  *   Difficulty: 4
  */
-unsigned floatScale2(unsigned uf) {
-    return 2;
+unsigned floatScale2(unsigned uf)
+{
+    unsigned sign=uf&0x80000000;
+    unsigned exp=(uf>>23)&0xff;
+    if (exp==0xff) return uf;
+    if (exp==0)
+        return sign|((uf & 0x7fffffff)<<1);
+    if(exp==0xfe)
+        return sign|0x7f800000;
+    return uf+0x00800000;
 }
 
 /*
@@ -191,7 +244,34 @@ unsigned floatScale2(unsigned uf) {
  *   Difficulty: 3
  */
 int float64_f2i(unsigned uf1, unsigned uf2) {
-    return 2;
+    unsigned sign=uf2>>31;
+    unsigned exp=(uf2>>20)&0x7ff;
+    if(exp>=0x7ff) return 0x80000000;
+    if(!exp) return 0;
+    int E=exp-1023;
+    if(E<0) return 0;
+    if(E>30) return 0x80000000;
+    unsigned mant_high = uf2 & 0xfffff;
+    unsigned mant_low = uf1;
+    unsigned val;
+    
+    if(E <= 20)
+        val=(1<<E)|(mant_high>>(20-E));
+    else
+    {
+        unsigned shift=52-E;
+        val=(1<<E)|(mant_high<<(E-20))|(mant_low>>shift);
+    }
+    if(sign) 
+    {
+        if(val>0x80000000) return 0x80000000;
+        return ~val+1;
+    }
+    else
+    {
+        if (val>0x7fffffff) return 0x80000000;
+        return val;
+    }
 }
 
 /*
@@ -208,5 +288,8 @@ int float64_f2i(unsigned uf1, unsigned uf2) {
  *   Difficulty: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    if (x>127) return 0x7f800000;
+    if (x<-149) return 0;
+    if (x<-126) return 1<<(x+149);
+    return (x+127)<<23;
 }
